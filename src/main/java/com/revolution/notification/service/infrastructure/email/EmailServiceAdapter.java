@@ -1,10 +1,12 @@
 package com.revolution.notification.service.infrastructure.email;
 
 import com.revolution.notification.service.api.port.EmailService;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 import static com.revolution.notification.service.infrastructure.Constants.FROM;
@@ -18,12 +20,18 @@ class EmailServiceAdapter implements EmailService {
 
     @Override
     public void send(final String to, final String subject, final String body) {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(FROM);
-        message.setTo(to);
-        message.setSubject(subject);
-        message.setText(body);
+        MimeMessage message = mailSender.createMimeMessage();
 
-        mailSender.send(message);
+        try {
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom(FROM);
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(body, true);
+
+            mailSender.send(message);
+        } catch (MessagingException e) {
+            e.printStackTrace();
+        }
     }
 }
